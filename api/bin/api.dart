@@ -1,20 +1,24 @@
-import 'package:api/routes/routes.dart';
-
 import 'dart:io';
+
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;
 
+import '../lib/routes/routes.dart';
+
 void main() async {
-  final ip = InternetAddress.anyIPv4 ?? '0.0.0.0';
+  final handler = Pipeline()
+      .addMiddleware(logRequests())
+      .addHandler(router.call);
 
-  final handler =
-      const Pipeline().addMiddleware(logRequests()).addHandler(router.call);
+  final server = await shelf_io.serve(
+    handler,
+    InternetAddress.anyIPv4,
+    8080,
+  );
 
-  final port = int.parse(Platform.environment['PORT'] ?? '8080');
-  final server = await shelf_io.serve(handler, ip, port);
-
-  // Enable content compression
   server.autoCompress = true;
 
-  print('Serving at http://${server.address.host}:${server.port}');
+  print(
+    "Servidor iniciado em http://${server.address.host}:${server.port}",
+  );
 }
